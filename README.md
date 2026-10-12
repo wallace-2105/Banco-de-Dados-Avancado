@@ -17,18 +17,18 @@ Aplicação web interativa moderna para estudo e fixação de conceitos avançad
 
 ---
 
-### 2. 🎯 Área de Desafios (Quiz com 30 Questões)
+### 2. 🎯 Área de Desafios (Simulado Interativo com 30 Questões)
+- **Todas as Questões na Mesma Página:** Todas as 30 perguntas ficam visíveis simultaneamente para que você responda com calma no seu próprio ritmo, como em uma prova real.
+- **Rastreador de Progresso em Tempo Real:** Barra fixa no topo que contabiliza as questões respondidas (ex: *Respondidas: 18 de 30*).
 - **3 Níveis de Dificuldade:**
   - 🟢 **Fácil (10 questões):** Conceitos essenciais e terminologias de Oracle PL/SQL.
   - 🟡 **Médio (10 questões):** Lógica procedural, exceções e junções de tabelas.
   - 🟣 **Difícil / Prático (10 questões):** Desafios de código e consultas SQL formatados em blocos de código (`pre`/`code`).
-- **Feedback Imediato:** Explicação detalhada para cada questão assim que o usuário seleciona a alternativa.
+- **Envio do Simulado com Correção Completa:**
+  - Botão **"Enviar Simulado"** no topo e no rodapé.
+  - Aviso caso haja questões em branco antes de enviar.
+  - Ao enviar, o sistema revela a nota global (total de acertos e erros) e exibe feedback inline na própria questão (alternativa marcada, gabarito correto e explicação pedagógica detalhada).
 - **Feedback Sonoro:** Efeitos de som sintetizados via Web Audio API (com opção de desativar no cabeçalho).
-- **Atalhos de Teclado:** Teclas `1`, `2`, `3`, `4` para selecionar a resposta e `Enter` para avançar.
-- **Tela de Resultados & Gabarito:**
-  - Medidor circular animado com percentual de acertos.
-  - Detalhamento por nível de dificuldade.
-  - Histórico completo para revisão das respostas dadas versus o gabarito oficial com explicações pedagógicas.
 
 ---
 
