@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Mestre do Banco de Dados Avançado - Plataforma interativa de estudos e quiz sobre Oracle PL/SQL, Triggers, Procedures, Functions, Joins e Sequences.">
+  <title>Mestre do Banco de Dados Avançado | Oracle PL/SQL</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header / Barra de Navegação -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">Mestre do Banco de Dados Avançado</h1>
+          <span class="brand-subtitle">Oracle PL/SQL & SQL Mastery</span>
+        </div>
+      </div>
+
+      <!-- Navegação Principal -->
+      <nav class="nav-tabs" aria-label="Navegação da Aplicação">
+        <button id="tab-theory" class="nav-tab active" data-tab="theory">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          <span>Resumos Teóricos</span>
+        </button>
+        <button id="tab-quiz" class="nav-tab" data-tab="quiz">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <span>Desafios (30 Questões)</span>
+        </button>
+      </nav>
+
+      <!-- Controles Adicionais (Som e Estatística Rápida) -->
+      <div class="header-actions">
+        <button id="toggle-sound" class="btn-icon" title="Ativar/Desativar Efeitos Sonoros" aria-label="Efeitos sonoros">
+          <svg id="sound-icon-on" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+          </svg>
+          <svg id="sound-icon-off" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M23 9l-6 6"></path>
+            <path d="M17 9l6 6"></path>
+          </svg>
+        </button>
+        <div class="user-score-badge" title="Desempenho no Quiz">
+          <span class="score-label">Score:</span>
+          <span id="quick-score" class="score-value">0/30</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="main-content">
+    
+    <!-- ==================== SEÇÃO 1: ÁREA DE RESUMOS (TEORIA) ==================== -->
+    <section id="section-theory" class="content-section active">
+      <div class="section-intro">
+        <div class="intro-badge">
+          <span class="dot"></span>
+          Guia de Estudos Essencial
+        </div>
+        <h2 class="section-title">Fundamentos e Arquitetura Oracle PL/SQL</h2>
+        <p class="section-desc">
+          Revise os conceitos-chave, sintaxes de comandos, procedures, triggers e controle de transação antes de testar suas habilidades nos desafios interativos.
+        </p>
+
+        <!-- Barra de Ferramentas da Teoria -->
+        <div class="theory-toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="theory-search" placeholder="Pesquisar nos resumos (ex: trigger, distinct, join)..." autocomplete="off">
+          </div>
+          <div class="toolbar-actions">
+            <button id="btn-expand-all" class="btn-secondary btn-sm">Expandir Todos</button>
+            <button id="btn-collapse-all" class="btn-secondary btn-sm">Recolher Todos</button>
+            <button id="btn-jump-to-quiz" class="btn-primary btn-sm">Iniciar Desafios &rarr;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accordion de Conteúdo Teórico -->
+      <div class="accordion-container" id="theory-accordion">
+
+        <!-- Card 1: Fundamentos de PL/SQL e Selects -->
+        <article class="accordion-item" data-topic="plsql select distinct like between in is null order by">
+          <button class="accordion-header" aria-expanded="true">
+            <div class="header-meta">
+              <span class="topic-tag tag-blue">Módulo 01</span>
+              <h3 class="topic-title">Fundamentos de PL/SQL e Selects</h3>
+            </div>
+            <span class="accordion-chevron">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </span>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-content">
+              <div class="theory-bullets">
+                <div class="bullet-item">
+                  <div class="bullet-icon">&#10148;</div>
+                  <div>
+                    <strong>PL/SQL (Procedural Language/SQL):</strong> É uma extensão procedural do SQL no Oracle. Permite o uso de recursos como <em>loops</em>, condicionais (<em>ifs</em>), declaração de variáveis e tratamento robusto de exceções dentro do próprio motor de banco de dados.
+                  </div>
+                </div>
+                <div class="bullet-item">
+                  <div class="bullet-icon">&#10148;</div>
+                  <div>
+                    <strong>Comandos Importantes de SELECT:</strong>
+                    <ul>
+                      <li><code>DISTINCT</code>: Remove duplicatas do conjunto resultante de registros.</li>
+                      <li>Operadores de Filtro: <code>LIKE</code> (com caractere coringa <code>%</code> para qualquer sequência de caracteres), <code>IN</code> (pertencimento a lista), <code>BETWEEN</code> (intervalos inclusivos) e <code>IS NULL</code> (verificação de valores nulos).</li>
+                      <li>A cláusula <code>ORDER BY</code> ordena os dados: por padrão em ordem ascendente (<code>ASC</code>) ou inversa/decrescente (<code>DESC</code>).</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Exemplo de Código Formatado -->
+              <div class="code-preview-block">
+                <div class="code-header">
+                  <span>Exemplo de Consulta SQL com Filtros e Ordenação</span>
+                  <button class="copy-btn" data-copy="SELECT DISTINCT first_name, salary&#10;FROM employees&#10;WHERE first_name LIKE 'M%'&#10;  AND salary NOT BETWEEN 1000 AND 2000&#10;ORDER BY salary DESC, first_name ASC;">Copiar</button>
+                </div>
+                <pre><code><span class="kwd">SELECT DISTINCT</span> first_name, salary
+<span class="kwd">FROM</span> employees
+<span class="kwd">WHERE</span> first_name <span class="kwd">LIKE</span> <span class="str">'M%'</span>
+  <span class="kwd">AND</span> salary <span class="kwd">NOT BETWEEN</span> 1000 <span class="kwd">AND</span> 2000
+<span class="kwd">ORDER BY</span> salary <span class="kwd">DESC</span>, first_name <span class="kwd">ASC</span>;</code></pre>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 2: Procedures vs Functions -->
+        <article class="accordion-item" data-topic="procedure function create or replace return in out">
+          <button class="accordion-header" aria-expanded="false">
+            <div class="header-meta">
+              <span class="topic-tag tag-cyan">Módulo 02</span>
+              <h3 class="topic-title">Procedures vs Functions</h3>
+            </div>
+            <span class="accordion-chevron">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </span>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-content">
+              <div class="comparison-grid">
+                <div class="comparison-card">
+                  <div class="comparison-header procedure">
+                    <h4>Procedure</h4>
+                    <span class="badge-mini">Execução de Tarefas</span>
+                  </div>
+                  <p>Bloco PL/SQL nomeado que executa tarefas ou operações no banco. <strong>Não precisa retornar valores</strong> diretamente através de comando return (embora possa utilizar parâmetros do tipo <code>OUT</code>).</p>
+                  <div class="syntax-label">Sintaxe Padrão:</div>
+                  <pre><code><span class="kwd">CREATE OR REPLACE PROCEDURE</span> nome (param <span class="kwd">IN</span> tipo) <span class="kwd">IS</span>
+<span class="kwd">BEGIN</span>
+  <span class="com">-- Comandos DML ou lógica procedural</span>
+  <span class="kwd">UPDATE</span> funcionarios <span class="kwd">SET</span> status = <span class="str">'demitido'</span> <span class="kwd">WHERE</span> cd_func = param;
+  <span class="kwd">COMMIT</span>;
+<span class="kwd">END</span>;</code></pre>
+                </div>
+
+                <div class="comparison-card">
+                  <div class="comparison-header function">
+                    <h4>Function</h4>
+                    <span class="badge-mini">Cálculo & Retorno</span>
+                  </div>
+                  <p>Similar à procedure, mas <strong>obrigatoriamente retorna um valor</strong> com a cláusula <code>RETURN</code>. Muito usada dentro de instruções SQL para transformar dados em tempo de execução.</p>
+                  <div class="syntax-label">Sintaxe Padrão:</div>
+                  <pre><code><span class="kwd">CREATE OR REPLACE FUNCTION</span> nome (param <span class="kwd">IN</span> tipo) 
+  <span class="kwd">RETURN</span> tipo <span class="kwd">IS</span>
+<span class="kwd">BEGIN</span>
+  <span class="com">-- Cálculo ou transformação</span>
+  <span class="kwd">RETURN</span> valor;
+<span class="kwd">END</span>;</code></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 3: Controle de Fluxo e Loops -->
+        <article class="accordion-item" data-topic="if elsif else exception loops while for exit when zero_divide no_data_found too_many_rows when others">
+          <button class="accordion-header" aria-expanded="false">
+            <div class="header-meta">
+              <span class="topic-tag tag-purple">Módulo 03</span>
+              <h3 class="topic-title">Controle de Fluxo e Loops</h3>
+            </div>
+            <span class="accordion-chevron">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </span>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-content">
+              <div class="cards-flow-grid">
+                <!-- IF -->
+                <div class="flow-box">
+                  <h4>Estrutura Condicional (IF)</h4>
+                  <p>Avalia condições encadeadas com a palavra-chave <code>ELSIF</code> (atenção à grafia sem "e" intermediário):</p>
+                  <pre><code><span class="kwd">IF</span> cond <span class="kwd">THEN</span>
+  <span class="com">-- código 1</span>
+<span class="kwd">ELSIF</span> cond2 <span class="kwd">THEN</span>
+  <span class="com">-- código 2</span>
+<span class="kwd">ELSE</span>
+  <span class="com">-- padrão</span>
+<span class="kwd">END IF</span>;</code></pre>
+                </div>
+
+                <!-- Loops -->
+                <div class="flow-box">
+                  <h4>Estruturas de Repetição (Loops)</h4>
+                  <ul>
+                    <li><strong>LOOP Básico:</strong> requer término manual com <code>EXIT WHEN cond;</code></li>
+                    <li><strong>WHILE LOOP:</strong> repete enquanto a condição for verdadeira.</li>
+                    <li><strong>FOR LOOP:</strong> itera por um intervalo fechado com sintaxe: <code>FOR i IN 1..5 LOOP ... END LOOP;</code></li>
+                  </ul>
+                  <pre><code><span class="kwd">FOR</span> v_counter <span class="kwd">IN</span> 1..5 <span class="kwd">LOOP</span>
+  DBMS_OUTPUT.PUT_LINE(<span class="str">'Contador: '</span> || v_counter);
+<span class="kwd">END LOOP</span>;</code></pre>
+                </div>
+
+                <!-- Exceções -->
+                <div class="flow-box flow-box-full">
+                  <h4>Tratamento de Exceções (Bloco EXCEPTION)</h4>
+                  <p>Tratamento de erros de execução capturados no bloco final do código PL/SQL:</p>
+                  <div class="exception-tags">
+                    <span class="exc-tag"><code>ZERO_DIVIDE</code> (Divisão por zero)</span>
+                    <span class="exc-tag"><code>NO_DATA_FOUND</code> (Nenhum registro encontrado em SELECT INTO)</span>
+                    <span class="exc-tag"><code>TOO_MANY_ROWS</code> (Múltiplas linhas em SELECT INTO escalar)</span>
+                    <span class="exc-tag"><code>WHEN OTHERS</code> (Captura genérica de erros não mapeados)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 4: Triggers -->
+        <article class="accordion-item" data-topic="triggers trigger before after dml ddl :new :old for each row">
+          <button class="accordion-header" aria-expanded="false">
+            <div class="header-meta">
+              <span class="topic-tag tag-orange">Módulo 04</span>
+              <h3 class="topic-title">Triggers (Gatilhos de Banco)</h3>
+            </div>
+            <span class="accordion-chevron">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </span>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-content">
+              <div class="theory-bullets">
+                <div class="bullet-item">
+                  <div class="bullet-icon">&#10148;</div>
+                  <div>
+                    <strong>Disparo Automático:</strong> Gatilhos disparados automaticamente por eventos DML (<code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>) ou eventos DDL / de sistema.
+                  </div>
+                </div>
+                <div class="bullet-item">
+                  <div class="bullet-icon">&#10148;</div>
+                  <div>
+                    <strong>Momento da Execução:</strong> Podem ocorrer <code>BEFORE</code> (antes da validação/gravação dos dados, ideal para auditoria prévia ou impedir reduções salariais) ou <code>AFTER</code> (depois do evento).
+                  </div>
+                </div>
+                <div class="bullet-item">
+                  <div class="bullet-icon">&#10148;</div>
+                  <div>
+                    <strong>Pseudo-registros <code>:NEW</code> e <code>:OLD</code>:</strong>
+                    <ul>
+                      <li><code>:NEW</code>: Contém os novos valores que estão sendo inseridos ou atualizados.</li>
+                      <li><code>:OLD</code>: Contém os valores antigos antes da alteração ou os registros prestes a serem apagados no <code>DELETE</code>.</li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="bullet-item">
+                  <div class="bullet-icon">&#10148;</div>
+                  <div>
+                    <strong>Cláusula <code>FOR EACH ROW</code>:</strong> Define que o gatilho será acionado para <em>cada linha afetada</em> pelo comando DML (nível de linha), e não apenas uma única vez para toda a instrução SQL (nível de instrução).
+                  </div>
+                </div>
+              </div>
+
+              <div class="code-preview-block">
+                <div class="code-header">
+                  <span>Exemplo de Trigger com Regra de Negócio e :OLD/:NEW</span>
+                  <button class="copy-btn" data-copy="CREATE OR REPLACE TRIGGER trg_valida_salario&#10;BEFORE UPDATE ON employees&#10;FOR EACH ROW&#10;BEGIN&#10;  IF :NEW.salary < :OLD.salary THEN&#10;    RAISE_APPLICATION_ERROR(-20001, 'Redução salarial não permitida!');&#10;  END IF;&#10;END;">Copiar</button>
+                </div>
+                <pre><code><span class="kwd">CREATE OR REPLACE TRIGGER</span> trg_valida_salario
+<span class="kwd">BEFORE UPDATE ON</span> employees
+<span class="kwd">FOR EACH ROW</span>
+<span class="kwd">BEGIN</span>
+  <span class="kwd">IF</span> :NEW.salary &lt; :OLD.salary <span class="kwd">THEN</span>
+    RAISE_APPLICATION_ERROR(-20001, <span class="str">'Redução salarial não permitida!'</span>);
+  <span class="kwd">END IF</span>;
+<span class="kwd">END</span>;</code></pre>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 5: Sequences e Joins -->
+        <article class="accordion-item" data-topic="sequences sequence nextval currval inner join left join right join full join cross join natural join">
+          <button class="accordion-header" aria-expanded="false">
+            <div class="header-meta">
+              <span class="topic-tag tag-emerald">Módulo 05</span>
+              <h3 class="topic-title">Sequences e Joins</h3>
+            </div>
+            <span class="accordion-chevron">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </span>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-content">
+              <!-- Sequences -->
+              <div class="sub-topic-section">
+                <h4 class="sub-title">1. Sequences no Oracle</h4>
+                <p>Objeto gerador de números sequenciais crescentes ou decrescentes, comumente utilizado para preenchimento de chaves primárias (PK).</p>
+                <div class="pill-badge-group">
+                  <div class="pill-box">
+                    <code>seq_nome.NEXTVAL</code>
+                    <span>Gera e retorna o próximo número sequencial da sequência.</span>
+                  </div>
+                  <div class="pill-box">
+                    <code>seq_nome.CURRVAL</code>
+                    <span>Retorna o valor atual da sequência na sessão atual.</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Joins -->
+              <div class="sub-topic-section">
+                <h4 class="sub-title">2. Tipos de Junções (Joins)</h4>
+                <div class="joins-table-wrapper">
+                  <table class="joins-table">
+                    <thead>
+                      <tr>
+                        <th>Tipo de Join</th>
+                        <th>Comportamento no Conjunto de Dados</th>
+                        <th>Exemplo Conceitual</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>Inner Join</strong></td>
+                        <td>Retorna apenas a <em>interseção</em> (coincidência exata) entre as duas tabelas.</td>
+                        <td><code>FROM Emp E INNER JOIN Dept D ON E.dept_id = D.id</code></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Left Join</strong></td>
+                        <td>Retorna <em>todas as linhas da tabela da esquerda</em> (primeira declarada), mesmo sem correspondência na direita.</td>
+                        <td>Preserva funcionários sem departamento atribuído.</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Right Join</strong></td>
+                        <td>Retorna <em>todas as linhas da tabela da direita</em> (segunda declarada), mesmo sem correspondência na esquerda.</td>
+                        <td>Preserva departamentos sem funcionários alocados.</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Full Join</strong></td>
+                        <td>Junta o <code>Inner Join</code> com <code>Left</code> e <code>Right Join</code> (todas as linhas de ambos os lados).</td>
+                        <td>Linhas sem par recebem <code>NULL</code> nas colunas opostas.</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Cross Join</strong></td>
+                        <td>Produto cartesiano irrestrito (multiplica linhas da tabela A pelas da B: se A=3 e B=3, resulta em 9 linhas).</td>
+                        <td><code>FROM TabelaA CROSS JOIN TabelaB</code></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Natural Join</strong></td>
+                        <td>Une tabelas automaticamente por colunas de mesmo nome. <strong>Gera erro de execução</strong> se as colunas homônimas possuírem tipos de dados diferentes (ex: NUMBER vs VARCHAR2).</td>
+                        <td><code>FROM Emp NATURAL JOIN Dept</code></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ==================== SEÇÃO 2: ÁREA DE DESAFIOS (QUIZ) ==================== -->
+    <section id="section-quiz" class="content-section">
+      
+      <!-- Quiz Navigation & Filter Bar -->
+      <div class="quiz-controls-panel">
+        <div class="quiz-filter-group">
+          <span class="filter-title">Filtrar Dificuldade:</span>
+          <div class="difficulty-buttons" role="group" aria-label="Filtro de Dificuldade">
+            <button class="diff-btn active" data-level="all">
+              Todas <span class="count-pill">30</span>
+            </button>
+            <button class="diff-btn" data-level="easy">
+              Fácil <span class="count-pill">10</span>
+            </button>
+            <button class="diff-btn" data-level="medium">
+              Médio <span class="count-pill">10</span>
+            </button>
+            <button class="diff-btn" data-level="hard">
+              Difícil / Prático <span class="count-pill">10</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="quiz-quick-actions">
+          <button id="btn-restart-quiz" class="btn-ghost" title="Reiniciar Questionário Atual">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.19"></path>
+            </svg>
+            Reiniciar
+          </button>
+        </div>
+      </div>
+
+      <!-- Quiz Arena Card -->
+      <div class="quiz-arena">
+        
+        <!-- Header do Quiz (Progresso e Marcadores) -->
+        <div class="quiz-status-bar">
+          <div class="status-left">
+            <span id="question-progress-label" class="progress-step-text">Questão 1 de 30</span>
+            <span id="question-level-badge" class="level-badge badge-easy">Nível Fácil</span>
+          </div>
+          <div class="status-right">
+            <div class="score-chip">
+              <span class="chip-label">Pontuação:</span>
+              <span id="quiz-current-score" class="chip-number">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barra de Progresso Visual -->
+        <div class="progress-track" aria-hidden="true">
+          <div id="quiz-progress-fill" class="progress-fill" style="width: 3.33%;"></div>
+        </div>
+
+        <!-- Pergunta Principal -->
+        <div class="question-container">
+          <h3 id="question-text" class="question-statement">Carregando questão...</h3>
+          <p id="question-subtitle" class="question-subtext hidden"></p>
+        </div>
+
+        <!-- Grade de Opções de Resposta -->
+        <div id="options-container" class="options-grid" role="radiogroup" aria-label="Alternativas">
+          <!-- Geradas dinamicamente via script.js -->
+        </div>
+
+        <!-- Banner de Feedback Imediato (Slide Up) -->
+        <div id="feedback-banner" class="feedback-panel hidden" aria-live="polite">
+          <div class="feedback-icon-box" id="feedback-icon">
+            <!-- Ícone injetado dinamicamente -->
+          </div>
+          <div class="feedback-details">
+            <h4 id="feedback-title" class="feedback-heading">Correto!</h4>
+            <p id="feedback-message" class="feedback-text">Excelente! Resposta correta.</p>
+          </div>
+          <div class="feedback-action">
+            <button id="btn-next-question" class="btn-next">
+              <span>Próxima</span>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal / Card de Resultado Final -->
+      <div id="quiz-results-card" class="results-modal-backdrop hidden">
+        <div class="results-card">
+          <div class="results-sparkle-decor"></div>
+          
+          <div class="results-header">
+            <div id="results-medal" class="results-medal-icon">&#127942;</div>
+            <h3 id="results-headline" class="results-title">Parabéns, Especialista!</h3>
+            <p id="results-subtitle" class="results-message">Você concluiu os desafios de banco de dados avançado.</p>
+          </div>
+
+          <!-- Medidor Circular de Aproveitamento -->
+          <div class="score-display-box">
+            <div class="circular-score">
+              <svg viewBox="0 0 100 100" class="score-ring-svg">
+                <circle class="score-ring-bg" cx="50" cy="50" r="42"></circle>
+                <circle id="score-ring-fill" class="score-ring-progress" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"></circle>
+              </svg>
+              <div class="circular-score-content">
+                <span id="final-percentage" class="score-percent">100%</span>
+                <span class="score-sub">Precisão</span>
+              </div>
+            </div>
+
+            <div class="score-stats-grid">
+              <div class="stat-box">
+                <span class="stat-number stat-correct" id="final-correct-count">30</span>
+                <span class="stat-label">Acertos</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-number stat-wrong" id="final-wrong-count">0</span>
+                <span class="stat-label">Erros</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-number stat-total" id="final-total-count">30</span>
+                <span class="stat-label">Total</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resumo de Desempenho por Dificuldade -->
+          <div class="level-breakdown">
+            <h4 class="breakdown-title">Desempenho por Nível:</h4>
+            <div class="breakdown-bars">
+              <div class="breakdown-item">
+                <div class="breakdown-header-line">
+                  <span class="breakdown-label">Fácil</span>
+                  <span id="breakdown-easy-stat" class="breakdown-val">10/10</span>
+                </div>
+                <div class="breakdown-track">
+                  <div id="breakdown-easy-bar" class="breakdown-fill fill-easy" style="width: 100%;"></div>
+                </div>
+              </div>
+
+              <div class="breakdown-item">
+                <div class="breakdown-header-line">
+                  <span class="breakdown-label">Médio</span>
+                  <span id="breakdown-med-stat" class="breakdown-val">10/10</span>
+                </div>
+                <div class="breakdown-track">
+                  <div id="breakdown-med-bar" class="breakdown-fill fill-medium" style="width: 100%;"></div>
+                </div>
+              </div>
+
+              <div class="breakdown-item">
+                <div class="breakdown-header-line">
+                  <span class="breakdown-label">Difícil / Prático</span>
+                  <span id="breakdown-hard-stat" class="breakdown-val">10/10</span>
+                </div>
+                <div class="breakdown-track">
+                  <div id="breakdown-hard-bar" class="breakdown-fill fill-hard" style="width: 100%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botões de Ação Final -->
+          <div class="results-actions">
+            <button id="btn-review-questions" class="btn-secondary">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              Revisar Respostas
+            </button>
+            <button id="btn-retry-all" class="btn-primary">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2.5 2v6h6M21.5 22v-6h-6"></path>
+                <path d="M22 11.5A10 10 0 0 0 3.2 7.2L2.5 8M2 12.5a10 10 0 0 0 18.8 4.3l.7-.8"></path>
+              </svg>
+              Tentar Novamente
+            </button>
+          </div>
+
+          <!-- Lista Retrátil de Revisão de Respostas -->
+          <div id="review-list-container" class="review-list-box hidden">
+            <h4 class="review-title">Gabarito e Histórico das Suas Respostas</h4>
+            <div id="review-items-container" class="review-items">
+              <!-- Preenchido via script.js -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Rodapé -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <p class="footer-copy">
+        <strong>Mestre do Banco de Dados Avançado</strong> &bull; Guia Prático & Quiz Oracle PL/SQL
+      </p>
+      <div class="footer-shortcuts">
+        <span class="shortcut-tip"><kbd>1</kbd>-<kbd>4</kbd> Selecionar alternativa</span>
+        <span class="shortcut-tip"><kbd>Enter</kbd> Avançar questão</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Script da Aplicação -->
+  <script src="script.js"></script>
+</body>
+</html>
