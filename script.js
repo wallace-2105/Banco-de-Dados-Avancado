@@ -567,10 +567,9 @@ const appState = {
   currentTab: "theory",
   currentFilter: "all",
   activeQuestionList: [...QUIZ_QUESTIONS],
-  currentIndex: 0,
+  userSelections: {}, // Mapeia { [questionId]: selectedOptionIndex }
+  isSubmitted: false,
   score: 0,
-  answeredState: false, // Flag se a questão atual já foi respondida
-  userAnswers: [], // Histórico de respostas do usuário { questionId, selectedIndex, isCorrect }
   sound: new SoundSystem()
 };
 
@@ -598,25 +597,27 @@ const DOM = {
   // Controles Quiz
   difficultyButtons: document.querySelectorAll(".diff-btn"),
   btnRestartQuiz: document.getElementById("btn-restart-quiz"),
-  questionProgressLabel: document.getElementById("question-progress-label"),
-  questionLevelBadge: document.getElementById("question-level-badge"),
-  quizCurrentScore: document.getElementById("quiz-current-score"),
-  quizProgressFill: document.getElementById("quiz-progress-fill"),
 
-  // Pergunta & Opções
-  questionText: document.getElementById("question-text"),
-  questionSubtitle: document.getElementById("question-subtitle"),
-  optionsContainer: document.getElementById("options-container"),
+  // Barra de Acompanhamento Fixo
+  trackerAnswered: document.getElementById("tracker-answered"),
+  trackerTotal: document.getElementById("tracker-total"),
+  trackerProgressFill: document.getElementById("tracker-progress-fill"),
+  btnSubmitTop: document.getElementById("btn-submit-quiz-top"),
+  btnSubmitBottom: document.getElementById("btn-submit-quiz-bottom"),
 
-  // Feedback Banner
-  feedbackBanner: document.getElementById("feedback-banner"),
-  feedbackIcon: document.getElementById("feedback-icon"),
-  feedbackTitle: document.getElementById("feedback-title"),
-  feedbackMessage: document.getElementById("feedback-message"),
-  btnNextQuestion: document.getElementById("btn-next-question"),
+  // Container de Todas as Questões
+  questionsListContainer: document.getElementById("questions-list-container"),
 
-  // Modal de Resultados
-  resultsModal: document.getElementById("quiz-results-card"),
+  // Modal de Confirmação
+  modalConfirm: document.getElementById("modal-confirm-submit"),
+  modalAnsweredCount: document.getElementById("modal-answered-count"),
+  modalTotalCount: document.getElementById("modal-total-count"),
+  modalPendingCount: document.getElementById("modal-pending-count"),
+  btnCancelSubmit: document.getElementById("btn-cancel-submit"),
+  btnForceSubmit: document.getElementById("btn-force-submit"),
+
+  // Banner / Resumo de Resultados
+  resultsBanner: document.getElementById("quiz-results-banner"),
   resultsHeadline: document.getElementById("results-headline"),
   resultsSubtitle: document.getElementById("results-subtitle"),
   resultsMedal: document.getElementById("results-medal"),
@@ -631,10 +632,8 @@ const DOM = {
   breakdownMedBar: document.getElementById("breakdown-med-bar"),
   breakdownHardStat: document.getElementById("breakdown-hard-stat"),
   breakdownHardBar: document.getElementById("breakdown-hard-bar"),
-  btnReviewQuestions: document.getElementById("btn-review-questions"),
   btnRetryAll: document.getElementById("btn-retry-all"),
-  reviewListContainer: document.getElementById("review-list-container"),
-  reviewItemsContainer: document.getElementById("review-items-container")
+  btnScrollToQuestions: document.getElementById("btn-scroll-to-questions")
 };
 
 // ==========================================
@@ -644,7 +643,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initNavigation();
   initTheoryAccordion();
   initQuiz();
-  initShortcuts();
 });
 
 // Navegação entre Abas (Teoria x Quiz)
@@ -723,7 +721,6 @@ function initTheoryAccordion() {
       if (query === "" || topicKeywords.includes(query) || textContent.includes(query)) {
         item.style.display = "block";
         if (query.length > 2) {
-          // Abre automaticamente se estiver filtrando
           item.querySelector(".accordion-header").setAttribute("aria-expanded", "true");
         }
       } else {
@@ -753,7 +750,7 @@ function initTheoryAccordion() {
 }
 
 // ==========================================
-// 7. FUNCIONALIDADES DO QUIZ INTERATIVO
+// 7. FUNCIONALIDADES DO QUIZ (TODAS AS QUESTÕES SIMULTÂNEAS)
 // ==========================================
 function initQuiz() {
   // Filtros de Dificuldade
@@ -766,33 +763,35 @@ function initQuiz() {
     });
   });
 
-  // Reiniciar Quiz
+  // Botão Limpar / Reiniciar Seleções
   DOM.btnRestartQuiz.addEventListener("click", () => {
-    if (confirm("Deseja reiniciar este teste do início?")) {
+    if (confirm("Deseja limpar suas respostas e recomeçar o simulado?")) {
       restartQuiz();
     }
   });
 
-  // Botão Próxima Pergunta
-  DOM.btnNextQuestion.addEventListener("click", () => {
-    handleNextQuestion();
+  // Botões de Enviar Simulado (Topo e Rodapé)
+  DOM.btnSubmitTop.addEventListener("click", submitQuiz);
+  DOM.btnSubmitBottom.addEventListener("click", submitQuiz);
+
+  // Ações do Modal de Confirmação para Questões Pendentes
+  DOM.btnCancelSubmit.addEventListener("click", () => {
+    DOM.modalConfirm.classList.add("hidden");
+  });
+  DOM.btnForceSubmit.addEventListener("click", () => {
+    DOM.modalConfirm.classList.add("hidden");
+    executeSubmission();
   });
 
-  // Modal de Resultados
-  DOM.btnRetryAll.addEventListener("click", () => {
-    DOM.resultsModal.classList.add("hidden");
-    restartQuiz();
+  // Botões do Banner de Resultado
+  DOM.btnRetryAll.addEventListener("click", restartQuiz);
+  DOM.btnScrollToQuestions.addEventListener("click", () => {
+    DOM.questionsListContainer.scrollIntoView({ behavior: "smooth" });
   });
 
-  DOM.btnReviewQuestions.addEventListener("click", () => {
-    DOM.reviewListContainer.classList.toggle("hidden");
-    if (!DOM.reviewListContainer.classList.contains("hidden")) {
-      DOM.reviewListContainer.scrollIntoView({ behavior: "smooth" });
-    }
-  });
-
-  // Carrega primeira pergunta
-  loadQuestion(appState.currentIndex);
+  // Renderiza todas as questões inicialmente
+  renderAllQuestions();
+  updateTracker();
 }
 
 function setDifficultyFilter(level) {
@@ -806,225 +805,289 @@ function setDifficultyFilter(level) {
 }
 
 function restartQuiz() {
-  appState.currentIndex = 0;
+  appState.userSelections = {};
+  appState.isSubmitted = false;
   appState.score = 0;
-  appState.answeredState = false;
-  appState.userAnswers = [];
-  DOM.quizCurrentScore.textContent = "0";
-  DOM.quickScore.textContent = `0/${appState.activeQuestionList.length}`;
-  DOM.feedbackBanner.classList.add("hidden");
-  DOM.resultsModal.classList.add("hidden");
-  DOM.reviewListContainer.classList.add("hidden");
 
-  loadQuestion(appState.currentIndex);
+  DOM.resultsBanner.classList.add("hidden");
+  DOM.modalConfirm.classList.add("hidden");
+  DOM.quickScore.textContent = `0/${appState.activeQuestionList.length}`;
+  
+  DOM.btnSubmitTop.disabled = false;
+  DOM.btnSubmitBottom.disabled = false;
+  DOM.btnSubmitTop.querySelector("span").textContent = "Enviar Simulado";
+  DOM.btnSubmitBottom.querySelector("span").textContent = "Finalizar e Enviar Todas as Respostas";
+
+  renderAllQuestions();
+  updateTracker();
+  window.scrollTo({ top: DOM.sectionQuiz.offsetTop - 80, behavior: "smooth" });
 }
 
-// Carregar pergunta específica
-function loadQuestion(index) {
-  if (index >= appState.activeQuestionList.length) {
-    showFinalResults();
+// Renderiza todas as questões no DOM simultaneamente
+function renderAllQuestions() {
+  DOM.questionsListContainer.innerHTML = "";
+  const prefixes = ["A", "B", "C", "D"];
+
+  appState.activeQuestionList.forEach((q) => {
+    const card = document.createElement("article");
+    card.className = "question-card";
+    card.id = `qcard-${q.id}`;
+
+    // Cabeçalho da Questão
+    const header = document.createElement("div");
+    header.className = "question-header";
+
+    const numSpan = document.createElement("span");
+    numSpan.className = "question-num";
+    numSpan.textContent = `Questão #${q.id}`;
+
+    const badgeSpan = document.createElement("span");
+    badgeSpan.className = "level-badge";
+    if (q.level === "easy") {
+      badgeSpan.classList.add("badge-easy");
+      badgeSpan.textContent = "Fácil";
+    } else if (q.level === "medium") {
+      badgeSpan.classList.add("badge-medium");
+      badgeSpan.textContent = "Médio";
+    } else {
+      badgeSpan.classList.add("badge-hard");
+      badgeSpan.textContent = "Difícil / Prático";
+    }
+
+    header.appendChild(numSpan);
+    header.appendChild(badgeSpan);
+    card.appendChild(header);
+
+    // Enunciado
+    const statement = document.createElement("h3");
+    statement.className = "question-statement";
+    statement.textContent = q.question;
+    card.appendChild(statement);
+
+    // Dica para questões de código
+    if (q.isCode) {
+      const subtext = document.createElement("p");
+      subtext.className = "question-subtext";
+      subtext.innerHTML = `<span>💡</span> <em>Desafio de Código / Consulta SQL: Analise a sintaxe abaixo.</em>`;
+      card.appendChild(subtext);
+    }
+
+    // Grade de Opções
+    const optionsGrid = document.createElement("div");
+    optionsGrid.className = "options-grid";
+    optionsGrid.setAttribute("role", "radiogroup");
+
+    q.options.forEach((optText, optIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      btn.setAttribute("role", "radio");
+      btn.setAttribute("aria-checked", "false");
+      btn.dataset.qid = q.id;
+      btn.dataset.idx = optIdx;
+
+      // Restaura seleção se já existia
+      if (appState.userSelections[q.id] === optIdx) {
+        btn.classList.add("selected");
+        btn.setAttribute("aria-checked", "true");
+        card.classList.add("answered");
+      }
+
+      const prefixSpan = document.createElement("span");
+      prefixSpan.className = "option-prefix";
+      prefixSpan.textContent = prefixes[optIdx];
+
+      const textSpan = document.createElement("span");
+      textSpan.className = "option-text";
+
+      if (q.isCode) {
+        const codeEl = document.createElement("code");
+        codeEl.className = "option-code";
+        codeEl.textContent = optText;
+        textSpan.appendChild(codeEl);
+      } else {
+        textSpan.textContent = optText;
+      }
+
+      btn.appendChild(prefixSpan);
+      btn.appendChild(textSpan);
+
+      // Clique para selecionar alternativa
+      btn.addEventListener("click", () => {
+        if (appState.isSubmitted) return;
+        selectQuestionOption(q.id, optIdx, optionsGrid, card);
+      });
+
+      optionsGrid.appendChild(btn);
+    });
+
+    card.appendChild(optionsGrid);
+
+    // Container de Feedback Inline (Inicialmente Vazio e Oculto)
+    const feedbackBox = document.createElement("div");
+    feedbackBox.className = "question-inline-feedback hidden";
+    feedbackBox.id = `qfeedback-${q.id}`;
+    card.appendChild(feedbackBox);
+
+    DOM.questionsListContainer.appendChild(card);
+  });
+}
+
+// Seleção de alternativa em uma questão
+function selectQuestionOption(qid, optIdx, optionsGrid, card) {
+  appState.userSelections[qid] = optIdx;
+  card.classList.add("answered");
+
+  // Atualiza classes visuais nas alternativas desta questão
+  const allBtns = optionsGrid.querySelectorAll(".option-btn");
+  allBtns.forEach((btn, idx) => {
+    if (idx === optIdx) {
+      btn.classList.add("selected");
+      btn.setAttribute("aria-checked", "true");
+    } else {
+      btn.classList.remove("selected");
+      btn.setAttribute("aria-checked", "false");
+    }
+  });
+
+  updateTracker();
+}
+
+// Atualiza o contador de respondidas no tracker fixo
+function updateTracker() {
+  const total = appState.activeQuestionList.length;
+  const answeredCount = appState.activeQuestionList.filter(q => appState.userSelections[q.id] !== undefined).length;
+
+  DOM.trackerAnswered.textContent = answeredCount;
+  DOM.trackerTotal.textContent = total;
+  const percent = total > 0 ? (answeredCount / total) * 100 : 0;
+  DOM.trackerProgressFill.style.width = `${percent}%`;
+
+  DOM.quickScore.textContent = `${answeredCount}/${total}`;
+}
+
+// ==========================================
+// 8. FINALIZAR E ENVIAR RESPOSTAS DO SIMULADO
+// ==========================================
+function submitQuiz() {
+  if (appState.isSubmitted) return;
+
+  const total = appState.activeQuestionList.length;
+  const answeredCount = appState.activeQuestionList.filter(q => appState.userSelections[q.id] !== undefined).length;
+
+  if (answeredCount < total) {
+    const pendentes = total - answeredCount;
+    DOM.modalAnsweredCount.textContent = answeredCount;
+    DOM.modalTotalCount.textContent = total;
+    DOM.modalPendingCount.textContent = pendentes;
+    DOM.modalConfirm.classList.remove("hidden");
     return;
   }
 
-  appState.answeredState = false;
-  DOM.feedbackBanner.classList.add("hidden");
-  DOM.feedbackBanner.className = "feedback-panel hidden";
+  executeSubmission();
+}
 
-  const q = appState.activeQuestionList[index];
+function executeSubmission() {
+  appState.isSubmitted = true;
   const total = appState.activeQuestionList.length;
+  let correctCount = 0;
+  let wrongCount = 0;
 
-  // Atualiza indicadores de progresso
-  DOM.questionProgressLabel.textContent = `Questão ${index + 1} de ${total}`;
-  const progressPercent = ((index + 1) / total) * 100;
-  DOM.quizProgressFill.style.width = `${progressPercent}%`;
+  let easyTotal = 0, easyCorrect = 0;
+  let medTotal = 0, medCorrect = 0;
+  let hardTotal = 0, hardCorrect = 0;
 
-  // Badge de Nível
-  DOM.questionLevelBadge.textContent = q.levelLabel;
-  DOM.questionLevelBadge.className = "level-badge";
-  if (q.level === "easy") {
-    DOM.questionLevelBadge.classList.add("badge-easy");
-  } else if (q.level === "medium") {
-    DOM.questionLevelBadge.classList.add("badge-medium");
-  } else {
-    DOM.questionLevelBadge.classList.add("badge-hard");
-  }
+  // Itera por todas as questões e avalia
+  appState.activeQuestionList.forEach(q => {
+    const card = document.getElementById(`qcard-${q.id}`);
+    const feedbackBox = document.getElementById(`qfeedback-${q.id}`);
+    const optionButtons = card.querySelectorAll(".option-btn");
+    const userChoice = appState.userSelections[q.id];
+    const isAnswered = userChoice !== undefined;
+    const isCorrect = isAnswered && userChoice === q.correct;
 
-  // Enunciado
-  DOM.questionText.textContent = q.question;
-
-  // Dica para questões de código
-  if (q.isCode) {
-    DOM.questionSubtitle.textContent = "💡 Desafio de Código / Consulta: Analise a sintaxe das alternativas abaixo.";
-    DOM.questionSubtitle.classList.remove("hidden");
-  } else {
-    DOM.questionSubtitle.classList.add("hidden");
-  }
-
-  // Gera Alternativas
-  DOM.optionsContainer.innerHTML = "";
-  const prefixes = ["A", "B", "C", "D"];
-
-  q.options.forEach((optText, optIdx) => {
-    const btn = document.createElement("button");
-    btn.className = "option-btn";
-    btn.setAttribute("role", "radio");
-    btn.setAttribute("aria-checked", "false");
-    btn.dataset.index = optIdx;
-
-    const prefixSpan = document.createElement("span");
-    prefixSpan.className = "option-prefix";
-    prefixSpan.textContent = prefixes[optIdx];
-
-    const textSpan = document.createElement("span");
-    textSpan.className = "option-text";
-
-    // Se a questão requer opções em formato de bloco de código (Questões 21-30)
-    if (q.isCode) {
-      const codeBlock = document.createElement("code");
-      codeBlock.className = "option-code";
-      codeBlock.textContent = optText;
-      textSpan.appendChild(codeBlock);
-    } else {
-      textSpan.textContent = optText;
-    }
-
-    btn.appendChild(prefixSpan);
-    btn.appendChild(textSpan);
-
-    btn.addEventListener("click", () => {
-      if (!appState.answeredState) {
-        selectOption(optIdx);
-      }
+    // Desativa botões
+    optionButtons.forEach(btn => {
+      btn.disabled = true;
     });
 
-    DOM.optionsContainer.appendChild(btn);
-  });
-}
-
-// Selecionar Opção
-function selectOption(selectedIdx) {
-  if (appState.answeredState) return;
-  appState.answeredState = true;
-
-  const currentQ = appState.activeQuestionList[appState.currentIndex];
-  const isCorrect = (selectedIdx === currentQ.correct);
-  const optionButtons = DOM.optionsContainer.querySelectorAll(".option-btn");
-
-  // Desabilita botões para impedir trocas
-  optionButtons.forEach(btn => {
-    btn.disabled = true;
-    btn.setAttribute("tabindex", "-1");
-  });
-
-  // Marca visualmente a opção escolhida
-  const chosenBtn = optionButtons[selectedIdx];
-  chosenBtn.setAttribute("aria-checked", "true");
-
-  if (isCorrect) {
-    chosenBtn.classList.add("correct");
-    appState.score++;
-    DOM.quizCurrentScore.textContent = appState.score;
-    DOM.quickScore.textContent = `${appState.score}/${appState.activeQuestionList.length}`;
-    appState.sound.playCorrect();
-    showFeedback(true, currentQ.explanation);
-  } else {
-    chosenBtn.classList.add("incorrect");
-    // Destaca a opção correta
-    const correctBtn = optionButtons[currentQ.correct];
-    if (correctBtn) {
-      correctBtn.classList.add("correct");
+    // Contabiliza por nível
+    if (q.level === "easy") {
+      easyTotal++;
+      if (isCorrect) easyCorrect++;
+    } else if (q.level === "medium") {
+      medTotal++;
+      if (isCorrect) medCorrect++;
+    } else if (q.level === "hard") {
+      hardTotal++;
+      if (isCorrect) hardCorrect++;
     }
-    appState.sound.playWrong();
-    showFeedback(false, currentQ.explanation);
-  }
 
-  // Registra no histórico para revisão posterior
-  appState.userAnswers.push({
-    questionId: currentQ.id,
-    questionText: currentQ.question,
-    options: currentQ.options,
-    selectedIndex: selectedIdx,
-    correctIndex: currentQ.correct,
-    isCorrect: isCorrect,
-    explanation: currentQ.explanation,
-    isCode: currentQ.isCode
+    if (isCorrect) {
+      correctCount++;
+      card.classList.add("correct");
+      if (optionButtons[userChoice]) {
+        optionButtons[userChoice].classList.add("correct");
+      }
+    } else {
+      wrongCount++;
+      card.classList.add("incorrect");
+      // Marca a errada escolhida pelo usuário
+      if (isAnswered && optionButtons[userChoice]) {
+        optionButtons[userChoice].classList.add("incorrect");
+      }
+      // Destaca qual era a alternativa correta
+      if (optionButtons[q.correct]) {
+        optionButtons[q.correct].classList.add("correct");
+      }
+    }
+
+    // Monta o Feedback Inline na própria questão
+    feedbackBox.classList.remove("hidden");
+    if (isCorrect) {
+      feedbackBox.className = "question-inline-feedback correct";
+      feedbackBox.innerHTML = `
+        <div class="qfb-icon">✅</div>
+        <div class="qfb-details">
+          <div class="qfb-status">Você Acertou!</div>
+          <div class="qfb-explanation">${q.explanation}</div>
+        </div>
+      `;
+    } else if (isAnswered) {
+      feedbackBox.className = "question-inline-feedback incorrect";
+      feedbackBox.innerHTML = `
+        <div class="qfb-icon">❌</div>
+        <div class="qfb-details">
+          <div class="qfb-status">Você Errou! Alternativa correta: Letra ${["A", "B", "C", "D"][q.correct]}</div>
+          <div class="qfb-explanation">${q.explanation}</div>
+        </div>
+      `;
+    } else {
+      feedbackBox.className = "question-inline-feedback unanswered";
+      feedbackBox.innerHTML = `
+        <div class="qfb-icon">⚠️</div>
+        <div class="qfb-details">
+          <div class="qfb-status">Não Respondida! Resposta correta: Letra ${["A", "B", "C", "D"][q.correct]}</div>
+          <div class="qfb-explanation">${q.explanation}</div>
+        </div>
+      `;
+    }
   });
-}
 
-// Exibe Feedback Imediato
-function showFeedback(isCorrect, explanation) {
-  DOM.feedbackBanner.classList.remove("hidden");
-  DOM.feedbackBanner.className = `feedback-panel ${isCorrect ? "success" : "error"}`;
+  appState.score = correctCount;
+  const percent = Math.round((correctCount / total) * 100);
 
-  if (isCorrect) {
-    DOM.feedbackIcon.innerHTML = `
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <polyline points="20 6 9 17 4 12"></polyline>
-      </svg>
-    `;
-    DOM.feedbackTitle.textContent = "Correto! Excelente raciocínio.";
-  } else {
-    DOM.feedbackIcon.innerHTML = `
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="18" y2="18"></line>
-      </svg>
-    `;
-    DOM.feedbackTitle.textContent = "Atenção: Resposta incorreta!";
-  }
-
-  DOM.feedbackMessage.textContent = explanation;
-
-  // Foco no botão Próxima
-  DOM.btnNextQuestion.focus();
-}
-
-// Avançar para a próxima questão
-function handleNextQuestion() {
-  if (!appState.answeredState) return;
-
-  appState.currentIndex++;
-  if (appState.currentIndex < appState.activeQuestionList.length) {
-    loadQuestion(appState.currentIndex);
-  } else {
-    showFinalResults();
-  }
-}
-
-// ==========================================
-// 8. RESULTADOS FINAIS & REVISÃO
-// ==========================================
-function showFinalResults() {
-  const total = appState.activeQuestionList.length;
-  const correct = appState.score;
-  const wrong = total - correct;
-  const percent = Math.round((correct / total) * 100);
-
-  DOM.resultsModal.classList.remove("hidden");
+  // Som de finalização
   appState.sound.playCompletion();
 
-  // Texto de Parabenização & Medalha
-  if (percent === 100) {
-    DOM.resultsMedal.textContent = "🏆";
-    DOM.resultsHeadline.textContent = "Mestre Supremo de PL/SQL!";
-    DOM.resultsSubtitle.textContent = "Desempenho perfeito! Você domina completamente comandos, triggers, joins e procedures.";
-  } else if (percent >= 80) {
-    DOM.resultsMedal.textContent = "🥇";
-    DOM.resultsHeadline.textContent = "Especialista em Banco de Dados!";
-    DOM.resultsSubtitle.textContent = "Excelente pontuação! Seu conhecimento de Oracle PL/SQL é altamente avançado.";
-  } else if (percent >= 60) {
-    DOM.resultsMedal.textContent = "🥈";
-    DOM.resultsHeadline.textContent = "Bom Desempenho!";
-    DOM.resultsSubtitle.textContent = "Você compreende os principais conceitos, mas vale a pena revisar alguns detalhes na teoria.";
-  } else {
-    DOM.resultsMedal.textContent = "📚";
-    DOM.resultsHeadline.textContent = "Continue Estudando!";
-    DOM.resultsSubtitle.textContent = "Revise a seção de Resumos Teóricos para fixar melhor os tópicos antes de uma nova tentativa.";
-  }
+  // Atualiza botões de envio
+  DOM.btnSubmitTop.disabled = true;
+  DOM.btnSubmitBottom.disabled = true;
+  DOM.btnSubmitTop.querySelector("span").textContent = "Simulado Corrigido";
+  DOM.btnSubmitBottom.querySelector("span").textContent = "Simulado Corrigido com Sucesso";
 
-  // Atualiza Números
-  DOM.finalCorrectCount.textContent = correct;
-  DOM.finalWrongCount.textContent = wrong;
+  // Preenche dados do Banner de Resultados
+  DOM.finalCorrectCount.textContent = correctCount;
+  DOM.finalWrongCount.textContent = wrongCount;
   DOM.finalTotalCount.textContent = total;
   DOM.finalPercentage.textContent = `${percent}%`;
 
@@ -1033,105 +1096,37 @@ function showFinalResults() {
   const offset = circumference - (circumference * percent) / 100;
   DOM.scoreRingFill.style.strokeDashoffset = offset;
 
-  // Estatísticas por Nível
-  let easyTotal = 0, easyCorrect = 0;
-  let medTotal = 0, medCorrect = 0;
-  let hardTotal = 0, hardCorrect = 0;
+  // Título e medalha de acordo com aproveitamento
+  if (percent === 100) {
+    DOM.resultsMedal.textContent = "🏆";
+    DOM.resultsHeadline.textContent = "Excelente! Mestre Supremo de PL/SQL!";
+    DOM.resultsSubtitle.textContent = `Você gabaritou todas as ${total} questões! Domínio absoluto de comandos, procedimentos, triggers e joins.`;
+  } else if (percent >= 80) {
+    DOM.resultsMedal.textContent = "🥇";
+    DOM.resultsHeadline.textContent = "Muito Bom! DBA Especialista!";
+    DOM.resultsSubtitle.textContent = `Você acertou ${correctCount} de ${total} questões (${percent}% de aproveitamento). Conhecimento avançado comprovado!`;
+  } else if (percent >= 60) {
+    DOM.resultsMedal.textContent = "🥈";
+    DOM.resultsHeadline.textContent = "Bom Desempenho! No Caminho Certo!";
+    DOM.resultsSubtitle.textContent = `Você acertou ${correctCount} de ${total} questões. Veja as correções abaixo para fixar os pontos onde errou.`;
+  } else {
+    DOM.resultsMedal.textContent = "📚";
+    DOM.resultsHeadline.textContent = "Continue Praticando e Estudando!";
+    DOM.resultsSubtitle.textContent = `Você acertou ${correctCount} de ${total} questões. Analise o gabarito comentado abaixo e releia a seção de Resumos Teóricos.`;
+  }
 
-  appState.userAnswers.forEach(ans => {
-    const originalQ = QUIZ_QUESTIONS.find(q => q.id === ans.questionId);
-    if (originalQ) {
-      if (originalQ.level === "easy") {
-        easyTotal++;
-        if (ans.isCorrect) easyCorrect++;
-      } else if (originalQ.level === "medium") {
-        medTotal++;
-        if (ans.isCorrect) medCorrect++;
-      } else if (originalQ.level === "hard") {
-        hardTotal++;
-        if (ans.isCorrect) hardCorrect++;
-      }
-    }
-  });
-
-  DOM.breakdownEasyStat.textContent = `${easyCorrect}/${easyTotal || 10}`;
+  // Barras de Progresso por Nível
+  DOM.breakdownEasyStat.textContent = `${easyCorrect}/${easyTotal}`;
   DOM.breakdownEasyBar.style.width = `${easyTotal > 0 ? (easyCorrect / easyTotal) * 100 : 0}%`;
 
-  DOM.breakdownMedStat.textContent = `${medCorrect}/${medTotal || 10}`;
+  DOM.breakdownMedStat.textContent = `${medCorrect}/${medTotal}`;
   DOM.breakdownMedBar.style.width = `${medTotal > 0 ? (medCorrect / medTotal) * 100 : 0}%`;
 
-  DOM.breakdownHardStat.textContent = `${hardCorrect}/${hardTotal || 10}`;
+  DOM.breakdownHardStat.textContent = `${hardCorrect}/${hardTotal}`;
   DOM.breakdownHardBar.style.width = `${hardTotal > 0 ? (hardCorrect / hardTotal) * 100 : 0}%`;
 
-  // Monta lista de revisão de respostas
-  buildReviewList();
-}
-
-function buildReviewList() {
-  DOM.reviewItemsContainer.innerHTML = "";
-
-  appState.userAnswers.forEach((ans, i) => {
-    const card = document.createElement("div");
-    card.className = `review-card ${ans.isCorrect ? "correct" : "incorrect"}`;
-
-    const qNum = document.createElement("div");
-    qNum.className = "review-q-num";
-    qNum.textContent = `Questão ${i + 1} • ${ans.isCorrect ? "✅ Acertou" : "❌ Errou"}`;
-
-    const qText = document.createElement("div");
-    qText.className = "review-q-text";
-    qText.textContent = ans.questionText;
-
-    const userAnsLine = document.createElement("div");
-    userAnsLine.className = "review-answer-line";
-    userAnsLine.innerHTML = `Sua resposta: <span class="review-user-ans ${ans.isCorrect ? "correct" : "incorrect"}"><strong>${ans.options[ans.selectedIndex]}</strong></span>`;
-
-    const correctAnsLine = document.createElement("div");
-    correctAnsLine.className = "review-answer-line";
-    correctAnsLine.innerHTML = `Gabarito correto: <span class="review-correct-ans">${ans.options[ans.correctIndex]}</span>`;
-
-    const explanationLine = document.createElement("div");
-    explanationLine.className = "review-answer-line";
-    explanationLine.style.color = "#94a3b8";
-    explanationLine.style.marginTop = "0.4rem";
-    explanationLine.innerHTML = `<em>Explicação:</em> ${ans.explanation}`;
-
-    card.appendChild(qNum);
-    card.appendChild(qText);
-    card.appendChild(userAnsLine);
-    if (!ans.isCorrect) {
-      card.appendChild(correctAnsLine);
-    }
-    card.appendChild(explanationLine);
-
-    DOM.reviewItemsContainer.appendChild(card);
-  });
-}
-
-// ==========================================
-// 9. ATALHOS DE TECLADO (1-4 e Enter)
-// ==========================================
-function initShortcuts() {
-  window.addEventListener("keydown", (e) => {
-    // Se o usuário estiver digitando no campo de busca da teoria, ignora
-    if (document.activeElement === DOM.theorySearch) return;
-
-    // Se estiver na aba de Quiz
-    if (appState.currentTab === "quiz" && DOM.resultsModal.classList.contains("hidden")) {
-      // Teclas 1, 2, 3, 4 para escolher alternativa
-      if (!appState.answeredState && ["1", "2", "3", "4"].includes(e.key)) {
-        const optionIdx = parseInt(e.key, 10) - 1;
-        const buttons = DOM.optionsContainer.querySelectorAll(".option-btn");
-        if (buttons[optionIdx]) {
-          buttons[optionIdx].click();
-        }
-      }
-
-      // Tecla Enter para avançar
-      if (appState.answeredState && e.key === "Enter") {
-        e.preventDefault();
-        DOM.btnNextQuestion.click();
-      }
-    }
-  });
+  // Exibe o Banner de Resultados e rola suavemente para ele
+  DOM.resultsBanner.classList.remove("hidden");
+  DOM.quickScore.textContent = `${correctCount}/${total} (${percent}%)`;
+  DOM.resultsBanner.scrollIntoView({ behavior: "smooth" });
 }
