@@ -51,7 +51,9 @@
 }
 
 /* Reset Global & Caixa */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -71,7 +73,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
-  background-image: 
+  background-image:
     radial-gradient(circle at 15% 15%, rgba(2, 132, 199, 0.12) 0%, transparent 40%),
     radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.08) 0%, transparent 45%);
   background-attachment: fixed;
@@ -247,8 +249,15 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ==========================================================================
@@ -353,7 +362,9 @@ body {
 }
 
 /* Botões Genéricos */
-.btn-primary, .btn-secondary, .btn-ghost {
+.btn-primary,
+.btn-secondary,
+.btn-ghost {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -463,11 +474,35 @@ body {
   letter-spacing: 0.05em;
 }
 
-.tag-blue   { background: rgba(2, 132, 199, 0.18); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
-.tag-cyan   { background: rgba(6, 182, 212, 0.18); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.3); }
-.tag-purple { background: rgba(139, 92, 246, 0.18); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.3); }
-.tag-orange { background: rgba(249, 115, 22, 0.18); color: #fb923c; border: 1px solid rgba(251, 146, 60, 0.3); }
-.tag-emerald{ background: rgba(16, 185, 129, 0.18); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+.tag-blue {
+  background: rgba(2, 132, 199, 0.18);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.tag-cyan {
+  background: rgba(6, 182, 212, 0.18);
+  color: #22d3ee;
+  border: 1px solid rgba(34, 211, 238, 0.3);
+}
+
+.tag-purple {
+  background: rgba(139, 92, 246, 0.18);
+  color: #c084fc;
+  border: 1px solid rgba(192, 132, 252, 0.3);
+}
+
+.tag-orange {
+  background: rgba(249, 115, 22, 0.18);
+  color: #fb923c;
+  border: 1px solid rgba(251, 146, 60, 0.3);
+}
+
+.tag-emerald {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
 
 .topic-title {
   font-size: 1.15rem;
@@ -495,7 +530,7 @@ body {
   border-top: 1px solid transparent;
 }
 
-.accordion-header[aria-expanded="true"] + .accordion-body {
+.accordion-header[aria-expanded="true"]+.accordion-body {
   max-height: 2000px;
   border-top-color: var(--border-subtle);
   transition: max-height 0.5s ease-in-out;
@@ -541,7 +576,8 @@ body {
   color: var(--text-muted);
 }
 
-.bullet-item li code, p code {
+.bullet-item li code,
+p code {
   background: rgba(56, 189, 248, 0.1);
   color: var(--primary-light);
   padding: 0.15rem 0.4rem;
@@ -587,7 +623,8 @@ body {
   color: #fff;
 }
 
-.code-preview-block pre, pre code {
+.code-preview-block pre,
+pre code {
   font-family: var(--font-mono);
   font-size: 0.88rem;
   line-height: 1.55;
@@ -598,9 +635,19 @@ body {
 }
 
 /* Syntax Highlighting Fake Classes */
-.kwd { color: #38bdf8; font-weight: 600; }
-.str { color: #34d399; }
-.com { color: #64748b; font-style: italic; }
+.kwd {
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.str {
+  color: #34d399;
+}
+
+.com {
+  color: #64748b;
+  font-style: italic;
+}
 
 /* Grid de Comparação: Procedure vs Function */
 .comparison-grid {
@@ -627,8 +674,13 @@ body {
   padding-bottom: 0.65rem;
 }
 
-.comparison-header.procedure h4 { color: #38bdf8; }
-.comparison-header.function h4 { color: #a78bfa; }
+.comparison-header.procedure h4 {
+  color: #38bdf8;
+}
+
+.comparison-header.function h4 {
+  color: #a78bfa;
+}
 
 .badge-mini {
   font-size: 0.72rem;
@@ -1248,9 +1300,17 @@ body {
   margin-bottom: 0.3rem;
 }
 
-.question-inline-feedback.correct .qfb-status { color: #34d399; }
-.question-inline-feedback.incorrect .qfb-status { color: #f87171; }
-.question-inline-feedback.unanswered .qfb-status { color: #fbbf24; }
+.question-inline-feedback.correct .qfb-status {
+  color: #34d399;
+}
+
+.question-inline-feedback.incorrect .qfb-status {
+  color: #f87171;
+}
+
+.question-inline-feedback.unanswered .qfb-status {
+  color: #fbbf24;
+}
 
 .qfb-explanation {
   font-size: 0.88rem;
@@ -1292,8 +1352,15 @@ body {
 }
 
 @keyframes zoomIn {
-  from { opacity: 0; transform: scale(0.92); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .results-medal-icon {
@@ -1304,8 +1371,13 @@ body {
 }
 
 @keyframes bounce {
-  from { transform: translateY(0); }
-  to { transform: translateY(-8px); }
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-8px);
+  }
 }
 
 .results-title {
@@ -1402,9 +1474,17 @@ body {
   font-family: var(--font-mono);
 }
 
-.stat-correct { color: #34d399; }
-.stat-wrong   { color: #f87171; }
-.stat-total   { color: #38bdf8; }
+.stat-correct {
+  color: #34d399;
+}
+
+.stat-wrong {
+  color: #f87171;
+}
+
+.stat-total {
+  color: #38bdf8;
+}
 
 .stat-label {
   font-size: 0.75rem;
@@ -1454,9 +1534,17 @@ body {
   transition: width 0.8s ease;
 }
 
-.fill-easy   { background: #10b981; }
-.fill-medium { background: #f59e0b; }
-.fill-hard   { background: #a855f7; }
+.fill-easy {
+  background: #10b981;
+}
+
+.fill-medium {
+  background: #f59e0b;
+}
+
+.fill-hard {
+  background: #a855f7;
+}
 
 /* Ações Finais */
 .results-actions {
@@ -1498,8 +1586,13 @@ body {
   font-size: 0.88rem;
 }
 
-.review-card.correct { border-left: 4px solid var(--color-success); }
-.review-card.incorrect { border-left: 4px solid var(--color-error); }
+.review-card.correct {
+  border-left: 4px solid var(--color-success);
+}
+
+.review-card.incorrect {
+  border-left: 4px solid var(--color-error);
+}
 
 .review-q-num {
   font-weight: 700;
@@ -1519,9 +1612,18 @@ body {
   font-size: 0.82rem;
 }
 
-.review-user-ans.correct { color: #34d399; }
-.review-user-ans.incorrect { color: #f87171; }
-.review-correct-ans { color: #38bdf8; font-weight: 600; }
+.review-user-ans.correct {
+  color: #34d399;
+}
+
+.review-user-ans.incorrect {
+  color: #f87171;
+}
+
+.review-correct-ans {
+  color: #38bdf8;
+  font-weight: 600;
+}
 
 /* ==========================================================================
    RODAPÉ
